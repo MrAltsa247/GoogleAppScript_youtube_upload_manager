@@ -66,7 +66,6 @@
 
 //SCRIPT:
 
-
 function uploadVideoAuto() {
   const driveFolderId = "YOUR_DRIVE_FOLDER_ID"; // Replace with your Google Drive folder ID
   const spreadsheetId = "YOUR_SPREADSHEET_ID"; // Replace with your Google Sheet ID
@@ -122,15 +121,10 @@ function uploadVideoAuto() {
       },
       "snippet,status",
       mediaBlob
-    );
-
-    // Save the video ID and update status to "Done"
+    ); // Save the video ID and update status to "Done"
+  
     sheet.getRange(nextRowIndex + 1, 6).setValue(video.id); // Column F = Video ID
     sheet.getRange(nextRowIndex + 1, 7).setValue("Done");   // Column G = Status
 
-    Logger.log("Video uploaded successfully: " + video.id);
-
-  } catch (e) {
-    Logger.log("Upload failed: " + e.message);
-  }
-}
+    Logger.log("Video uploaded successfully: " + video.id); } catch (e) {
+    Logger.log("Upload failed: " + e.message);}}
