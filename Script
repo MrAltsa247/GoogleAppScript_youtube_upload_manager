@@ -1,1 +1,63 @@
+function uploadVideoAuto() {
+  const driveFolderId = "YOUR_DRIVE_FOLDER_ID"; // Replace with your Google Drive folder ID
+  const spreadsheetId = "YOUR_SPREADSHEET_ID"; // Replace with your Google Sheet ID
+  const sheetName = "YOUR_SHEET_NAME"; // Replace with your target sheet name
+
+  const folder = DriveApp.getFolderById(driveFolderId);
+  const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName(sheetName);
+  const data = sheet.getDataRange().getValues();
+
+  let lastUploadedRowIndex = 0;
+
+  // Find the last row where the status is "Done"
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] === "Done") { // Column G = Status
+      lastUploadedRowIndex = i;
+    }
+  }
+
+  const nextRowIndex = lastUploadedRowIndex + 1;
+
+  // Skip if there's no new video or Video ID already exists
+  if (nextRowIndex >= data.length || data[nextRowIndex][5]) { // Column F = Video ID
+    Logger.log("No new video to upload.");
+    return;
+  }
+
+  const [fileName, title, description, tags, categoryId] = data[nextRowIndex];
+
+  // Find the video file in Google Drive
+  const files = folder.getFilesByName(fileName);
+  if (!files.hasNext()) {
+    Logger.log("File not found: " + fileName);
+    return;
+  }
+
+  const file = files.next();
+  const mediaBlob = file.getBlob();
+
+  try {
+    // Upload the video to YouTube
+    const video = YouTube.Videos.insert(
+      {
+        snippet: {
+          title: title,
+          description: description,
+          tags: tags ? tags.split(", ") : [],
+          categoryId: categoryId
+        },
+        status: {
+          privacyStatus: "public", // Set to "private" or "unlisted" if needed
+          selfDeclaredMadeForKids: false
+        }
+      },
+      "snippet,status",
+      mediaBlob
+    ); // Save the video ID and update status to "Done"
+  
+    sheet.getRange(nextRowIndex + 1, 6).setValue(video.id); // Column F = Video ID
+    sheet.getRange(nextRowIndex + 1, 7).setValue("Done");   // Column G = Status
+
+    Logger.log("Video uploaded successfully: " + video.id); } catch (e) {
+    Logger.log("Upload failed: " + e.message);}}
 
